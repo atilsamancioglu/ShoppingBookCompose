@@ -1,7 +1,10 @@
 package com.atilsamancioglu.shoppingbook.screens
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -33,13 +36,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import com.atilsamancioglu.shoppingbook.R
 import com.atilsamancioglu.shoppingbook.model.Item
+import java.io.ByteArrayOutputStream
 
 @Composable
-fun AddItemScreen(saveFunction : () -> Unit) {
+fun AddItemScreen(saveFunction : (item: Item) -> Unit) {
 
     val itemName = remember {
         mutableStateOf("")
@@ -56,6 +61,8 @@ fun AddItemScreen(saveFunction : () -> Unit) {
     var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
     }
+
+    val context = LocalContext.current
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -114,12 +121,17 @@ fun AddItemScreen(saveFunction : () -> Unit) {
             )
 
             Button(onClick = {
+
+                val imageByteArray = selectedImageUri?.let {
+                    resizeImage(context = context, uri= it, maxWidth = 600, maxHeight = 400)
+                } ?: ByteArray(0)
+
                 val itemToInsert = Item(itemName = itemName.value,
                     storeName = storeName.value,
                     price = price.value,
-                    image = ByteArray(1)
+                    image = imageByteArray
                     )
-                saveFunction()
+                saveFunction(itemToInsert)
             }) {
                 Text("Save")
             }
@@ -187,4 +199,31 @@ fun ImagePicker(onImageSelected : (Uri?) -> Unit) {
 
     }
 
+}
+
+
+fun resizeImage(context: Context, uri:Uri, maxWidth: Int, maxHeight: Int) : ByteArray? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+
+        val ratio = originalBitmap.width.toFloat() / originalBitmap.height.toFloat()
+
+        var width = maxWidth
+        var height = (width / ratio).toInt()
+
+        if (height > maxHeight) {
+            height = maxHeight
+            width = (height * ratio).toInt()
+        }
+
+        val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap,width,height,false)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100,byteArrayOutputStream)
+        byteArrayOutputStream.toByteArray()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
 }
