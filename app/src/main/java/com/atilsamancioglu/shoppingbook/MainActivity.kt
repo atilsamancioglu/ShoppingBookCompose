@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.atilsamancioglu.shoppingbook.model.Item
+import com.atilsamancioglu.shoppingbook.screens.AddItemScreen
 import com.atilsamancioglu.shoppingbook.ui.theme.ShoppingBookTheme
 
 class MainActivity : ComponentActivity() {
@@ -65,6 +66,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     ShoppingBookTheme {
-        
+        AddItemScreen {
+
+        }
     }
 }
